@@ -112,9 +112,7 @@ void IOCompletionPort::StartServer()
 			return;
 		}
 
-		// m_pClientInfo = (struct stSOCKETINFO *)malloc(sizeof(struct stSOCKETINFO));
 		m_pSocketInfo = new stSOCKETINFO();
-		// ZeroMemory(m_pSocketInfo, sizeof(struct stSOCKETINFO));
 		m_pSocketInfo->socket = clientSocket;
 		m_pSocketInfo->recvBytes = 0;
 		m_pSocketInfo->sendBytes = 0;

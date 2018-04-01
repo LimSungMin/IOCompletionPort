@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27428.2015
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iocp-sample", "iocp-sample\iocp-sample.vcxproj", "{68A2324D-1E4F-43AC-A462-42FEBC23DE37}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iocp-server", "iocp-sample\iocp-sample.vcxproj", "{68A2324D-1E4F-43AC-A462-42FEBC23DE37}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iocp-client", "iocp-client\iocp-client.vcxproj", "{9CBA69A0-FD71-4EDC-8014-9DD67FEC4E13}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,14 @@ Global
 		{68A2324D-1E4F-43AC-A462-42FEBC23DE37}.Release|x64.Build.0 = Release|x64
 		{68A2324D-1E4F-43AC-A462-42FEBC23DE37}.Release|x86.ActiveCfg = Release|Win32
 		{68A2324D-1E4F-43AC-A462-42FEBC23DE37}.Release|x86.Build.0 = Release|Win32
+		{9CBA69A0-FD71-4EDC-8014-9DD67FEC4E13}.Debug|x64.ActiveCfg = Debug|x64
+		{9CBA69A0-FD71-4EDC-8014-9DD67FEC4E13}.Debug|x64.Build.0 = Debug|x64
+		{9CBA69A0-FD71-4EDC-8014-9DD67FEC4E13}.Debug|x86.ActiveCfg = Debug|Win32
+		{9CBA69A0-FD71-4EDC-8014-9DD67FEC4E13}.Debug|x86.Build.0 = Debug|Win32
+		{9CBA69A0-FD71-4EDC-8014-9DD67FEC4E13}.Release|x64.ActiveCfg = Release|x64
+		{9CBA69A0-FD71-4EDC-8014-9DD67FEC4E13}.Release|x64.Build.0 = Release|x64
+		{9CBA69A0-FD71-4EDC-8014-9DD67FEC4E13}.Release|x86.ActiveCfg = Release|Win32
+		{9CBA69A0-FD71-4EDC-8014-9DD67FEC4E13}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
