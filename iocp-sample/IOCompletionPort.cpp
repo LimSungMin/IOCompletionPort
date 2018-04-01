@@ -124,7 +124,8 @@ void IOCompletionPort::StartServer()
 		flags = 0;
 
 		m_hIOCP = CreateIoCompletionPort(
-			(HANDLE)clientSocket, m_hIOCP, (DWORD)m_pSocketInfo, 0);
+			(HANDLE)clientSocket, m_hIOCP, (DWORD)m_pSocketInfo, 0
+		);
 
 		// 중첩 소켓을 지정하고 완료시 실행될 함수를 넘겨줌
 		nResult = WSARecv(
@@ -176,55 +177,62 @@ bool IOCompletionPort::CreateWorkerThread()
 }
 
 void IOCompletionPort::WorkerThread()
-{	
-	DWORD	recvBytes;
-	DWORD	sendBytes;
-	DWORD	completionKey;
-	DWORD	flags;
-
+{		
 	// 함수 호출 성공 여부
 	BOOL	bResult;
 	int		nResult;
-
-	struct stSOCKETINFO * eventSocket;
+	// Overlapped I/O 작업에서 전송된 데이터 크기
+	DWORD	recvBytes;
+	DWORD	sendBytes;
+	// Completion Key를 받을 포인터 변수
+	stSOCKETINFO *	pCompletionKey;
+	// I/O 작업을 위해 요청한 Overlapped 구조체를 받을 포인터	
+	stSOCKETINFO *	pSocketInfo;
+	// 
+	DWORD	dwFlags = 0;
 
 	while (m_bWorkerThread)
 	{
-		// 입출력 완료 대기
+		/**
+		 * 이 함수로 인해 쓰레드들은 WaitingThread Queue 에 대기상태로 들어가게 됨
+		 * 완료된 Overlapped I/O 작업이 발생하면 IOCP Queue 에서 완료된 작업을 가져와
+		 * 뒷처리를 함		 
+		 */
 		bResult = GetQueuedCompletionStatus(m_hIOCP,
-			&recvBytes,						// 실제로 전송된 바이트
-			&completionKey,					// completion key
-			(LPOVERLAPPED *)&eventSocket,	// overlapped I/O 객체
-			INFINITE						// 대기할 시간
+			&recvBytes,				// 실제로 전송된 바이트
+			(LPDWORD)&pCompletionKey,	// completion key
+			(LPOVERLAPPED *)&pSocketInfo,			// overlapped I/O 객체
+			INFINITE				// 대기할 시간
 		);
 
-		if (!bResult)
+		if (!bResult && recvBytes == 0)
 		{
-			printf_s("[ERROR] GetQueuedCompletionStatus 실패\n");
-			closesocket(eventSocket->socket);
-			free(eventSocket);
-			return;
+			printf_s("[INFO] socket(%d) 접속 끊김\n", pSocketInfo->socket);
+			closesocket(pSocketInfo->socket);
+			free(pSocketInfo);
+			continue;
 		}
 
-		eventSocket->dataBuf.len = recvBytes;
+		pSocketInfo->dataBuf.len = recvBytes;
 
 		if (recvBytes == 0)
 		{
-			closesocket(eventSocket->socket);
-			free(eventSocket);
+			closesocket(pSocketInfo->socket);
+			free(pSocketInfo);
 			continue;
 		}
 		else
 		{
 			printf_s("[INFO] 메시지 수신- Bytes : [%d], Msg : [%s]\n",
-				eventSocket->dataBuf.len, eventSocket->dataBuf.buf);
+				pSocketInfo->dataBuf.len, pSocketInfo->dataBuf.buf);
 
+			// 클라이언트의 응답을 그대로 송신			
 			nResult = WSASend(
-				eventSocket->socket,
-				&(eventSocket->dataBuf),
+				pSocketInfo->socket,
+				&(pSocketInfo->dataBuf),
 				1,
 				&sendBytes,
-				0,
+				dwFlags,
 				NULL,
 				NULL
 			);
@@ -235,22 +243,26 @@ void IOCompletionPort::WorkerThread()
 			}
 
 			printf_s("[INFO] 메시지 송신 - Bytes : [%d], Msg : [%s]\n",
-				eventSocket->dataBuf.len, eventSocket->dataBuf.buf);
+				pSocketInfo->dataBuf.len, pSocketInfo->dataBuf.buf);
 
-			ZeroMemory(eventSocket->messageBuffer, MAX_BUFFER);
-			eventSocket->recvBytes = 0;
-			eventSocket->sendBytes = 0;
-			eventSocket->dataBuf.len = MAX_BUFFER;
-			eventSocket->dataBuf.buf = eventSocket->messageBuffer;
-			flags = 0;
+			// stSOCKETINFO 데이터 초기화
+			ZeroMemory(&(pSocketInfo->overlapped), sizeof(OVERLAPPED));
+			pSocketInfo->dataBuf.len = MAX_BUFFER;
+			pSocketInfo->dataBuf.buf = pSocketInfo->messageBuffer;
+ 			ZeroMemory(pSocketInfo->messageBuffer, MAX_BUFFER);			
+ 			pSocketInfo->recvBytes = 0;
+ 			pSocketInfo->sendBytes = 0;
+ 			
+			dwFlags = 0;			
 
+			// 클라이언트로부터 다시 응답을 받기 위해 WSARecv 를 호출해줌
 			nResult = WSARecv(
-				eventSocket->socket,
-				&(eventSocket->dataBuf),
+				pSocketInfo->socket,
+				&(pSocketInfo->dataBuf),
 				1,
 				&recvBytes,
-				&flags,
-				&eventSocket->overlapped,
+				&dwFlags,
+				(LPWSAOVERLAPPED)&(pSocketInfo->overlapped),
 				NULL
 			);
 
