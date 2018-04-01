@@ -104,8 +104,11 @@ void IOCompletionPort::StartServer()
 
 	// 클라이언트 접속을 받음
 	while (m_bAccept)
-	{
-		clientSocket = accept(m_listenSocket, (struct sockaddr *)&clientAddr, &addrLen);
+	{		
+		clientSocket = WSAAccept(
+			m_listenSocket, (struct sockaddr *)&clientAddr, &addrLen, NULL, NULL
+		);
+
 		if (clientSocket == INVALID_SOCKET)
 		{
 			printf_s("[ERROR] Accept 실패\n");
